@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DataVault - Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin: 0 0 32px 0;
+      color: #1a1a1a;
+    }
+    
+    .welcome-message {
+      background-color: #e3f2fd;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      color: #1565c0;
+    }
+    
+    .section {
+      margin-bottom: 32px;
+    }
+    
+    .section h2 {
+      font-size: 20px;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    input[type="email"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    
+    input[type="email"]:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-primary {
+      background-color: #0066cc;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #0052a3;
+    }
+    
+    .btn-secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #d0d0d0;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+    
+    .aliases-list {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .alias-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #e0e0e0;
+      transition: background-color 0.2s;
+    }
+    
+    .alias-item:last-child {
+      border-bottom: none;
+    }
+    
+    .alias-item:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .alias-info {
+      flex: 1;
+    }
+    
+    .alias-domain {
+      font-weight: 500;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    
+    .alias-email {
+      font-family: monospace;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .alias-meta {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    
+    .alias-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .message.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .export-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DataVault Settings</h1>
+    
+    <div id="welcomeMessage" class="welcome-message" style="display: none;">
+      Welcome! Let's set up your email alias manager. Enter your primary email address below where all aliases will forward to.
+    </div>
+    
+    <div id="messageArea"></div>
+    
+    <div class="section">
+      <h2>Target Email Address</h2>
+      <p style="color: #666; margin-bottom: 16px;">
+        All email aliases will forward to this address using the + trick (e.g., youremail+alias@domain.com)
+      </p>
+      <div class="form-group">
+        <label for="targetEmail">Your Email Address</label>
+        <input type="email" id="targetEmail" placeholder="your.email@example.com" required>
+      </div>
+      <button class="btn-primary" id="saveEmailBtn">Save Email</button>
+    </div>
+    
+    <div class="section">
+      <h2>Compatibility Settings</h2>
+      <p style="color: #666; margin-bottom: 16px;">
+        Some websites don't accept email addresses with "+" symbols. Use these settings to generate compatible aliases.
+      </p>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="compatibilityMode" style="margin-right: 8px; width: auto;">
+          Enable Compatibility Mode (use dots instead of + symbols)
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="aliasFormat">Default Alias Format</label>
+        <select id="aliasFormat" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;">
+          <option value="standard">Standard: user+site-random@domain.com</option>
+          <option value="dots">Dots: user.site.random@domain.com</option>
+          <option value="clean">Clean: usersiterandom@domain.com</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>Your Email Aliases</h2>
+      <div id="aliasesList" class="aliases-list">
+        <div class="empty-state">
+          <p>No aliases created yet. Visit any website and click the @ button next to an email field to generate your first alias!</p>
+        </div>
+      </div>
+      <div class="export-section">
+        <button class="btn-secondary" id="exportBtn">Export as CSV</button>
+        <button class="btn-secondary" id="refreshBtn">Refresh List</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="options.js"></script>
+</body>
+</html>

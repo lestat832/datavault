@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DataVault Icon Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .icon-preview {
+      display: inline-block;
+      margin: 10px;
+      text-align: center;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .icon-container {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 128px;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0052a3;
+    }
+  </style>
+</head>
+<body>
+  <h1>DataVault Icon Generator</h1>
+  
+  <div id="iconPreviews"></div>
+  
+  <div style="margin-top: 20px;">
+    <button onclick="downloadAllIcons()">Download All Icons</button>
+  </div>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+    
+    function createVaultIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Enable smooth rendering for better quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Background gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, size, size);
+      bgGradient.addColorStop(0, '#0066cc');
+      bgGradient.addColorStop(1, '#0052a3');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // Scale factor for responsive design
+      const scale = size / 128;
+      
+      // Draw vault door background
+      ctx.save();
+      ctx.translate(size/2, size/2);
+      
+      // Outer vault door
+      const vaultRadius = 48 * scale;
+      const innerRadius = 40 * scale;
+      
+      // Metallic vault gradient
+      const vaultGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, vaultRadius);
+      vaultGradient.addColorStop(0, '#e0e0e0');
+      vaultGradient.addColorStop(0.5, '#b0b0b0');
+      vaultGradient.addColorStop(1, '#808080');
+      
+      // Draw outer ring
+      ctx.beginPath();
+      ctx.arc(0, 0, vaultRadius, 0, Math.PI * 2);
+      ctx.fillStyle = vaultGradient;
+      ctx.fill();
+      
+      // Draw inner circle (vault door)
+      ctx.beginPath();
+      ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fill();
+      
+      // Draw combination lock dial marks
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 1 * scale;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30) * Math.PI / 180;
+        const x1 = Math.cos(angle) * (innerRadius - 5 * scale);
+        const y1 = Math.sin(angle) * (innerRadius - 5 * scale);
+        const x2 = Math.cos(angle) * (innerRadius - 10 * scale);
+        const y2 = Math.sin(angle) * (innerRadius - 10 * scale);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      
+      // Draw center lock mechanism
+      const lockGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 * scale);
+      lockGradient.addColorStop(0, '#d0d0d0');
+      lockGradient.addColorStop(1, '#909090');
+      
+      ctx.beginPath();
+      ctx.arc(0, 0, 20 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = lockGradient;
+      ctx.fill();
+      ctx.strokeStyle = '#606060';
+      ctx.lineWidth = 2 * scale;
+      ctx.stroke();
+      
+      // Draw @ symbol in center
+      ctx.fillStyle = '#0066cc';
+      ctx.font = `bold ${24 * scale}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('@', 0, 0);
+      
+      // Draw vault handle (right side)
+      ctx.beginPath();
+      ctx.arc(vaultRadius - 5 * scale, 0, 8 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = '#606060';
+      ctx.fill();
+      
+      // Add subtle shadow effect
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 4 * scale;
+      ctx.shadowOffsetX = 2 * scale;
+      ctx.shadowOffsetY = 2 * scale;
+      
+      ctx.restore();
+      
+      return canvas;
+    }
+    
+    function displayIcons() {
+      const container = document.getElementById('iconPreviews');
+      container.innerHTML = '';
+      
+      sizes.forEach(size => {
+        const preview = document.createElement('div');
+        preview.className = 'icon-preview';
+        
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'icon-container';
+        
+        const canvas = createVaultIcon(size);
+        iconContainer.appendChild(canvas);
+        
+        const label = document.createElement('div');
+        label.textContent = `${size}x${size}`;
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = `Download icon${size}.png`;
+        downloadBtn.onclick = () => downloadIcon(canvas, size);
+        
+        preview.appendChild(iconContainer);
+        preview.appendChild(label);
+        preview.appendChild(downloadBtn);
+        
+        container.appendChild(preview);
+      });
+    }
+    
+    function downloadIcon(canvas, size) {
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon${size}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    
+    function downloadAllIcons() {
+      sizes.forEach(size => {
+        const canvas = createVaultIcon(size);
+        downloadIcon(canvas, size);
+      });
+    }
+    
+    // Display icons on load
+    displayIcons();
+  </script>
+</body>
+</html>

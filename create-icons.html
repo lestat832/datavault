@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DataVault Icon Generator</title>
+</head>
+<body>
+  <h1>DataVault Icon Generator</h1>
+  <p>Right-click each icon below and select "Save image as..." to save it with the correct filename.</p>
+  
+  <div id="icons"></div>
+  
+  <script>
+    // Create icons when page loads
+    window.onload = function() {
+      const sizes = [16, 32, 48, 128];
+      const container = document.getElementById('icons');
+      
+      sizes.forEach(size => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        
+        // Background gradient
+        const bgGradient = ctx.createLinearGradient(0, 0, size, size);
+        bgGradient.addColorStop(0, '#0066cc');
+        bgGradient.addColorStop(1, '#0052a3');
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, size, size);
+        
+        // Scale factor
+        const scale = size / 128;
+        
+        // Draw vault
+        ctx.save();
+        ctx.translate(size/2, size/2);
+        
+        // Vault circle
+        const vaultRadius = 48 * scale;
+        ctx.beginPath();
+        ctx.arc(0, 0, vaultRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+        
+        // Inner circle
+        ctx.beginPath();
+        ctx.arc(0, 0, 40 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fill();
+        
+        // Center lock
+        ctx.beginPath();
+        ctx.arc(0, 0, 20 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#d0d0d0';
+        ctx.fill();
+        ctx.strokeStyle = '#606060';
+        ctx.lineWidth = 2 * scale;
+        ctx.stroke();
+        
+        // @ symbol
+        ctx.fillStyle = '#0066cc';
+        ctx.font = `bold ${24 * scale}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('@', 0, 0);
+        
+        ctx.restore();
+        
+        // Convert to image
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.style.margin = '10px';
+        img.style.border = '1px solid #ccc';
+        
+        const div = document.createElement('div');
+        div.style.marginBottom = '20px';
+        div.innerHTML = `<h3>icon${size}.png (${size}x${size})</h3>`;
+        div.appendChild(img);
+        
+        container.appendChild(div);
+      });
+    };
+  </script>
+</body>
+</html>
