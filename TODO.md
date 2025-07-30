@@ -54,7 +54,7 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
   - [ ] `POST /api/auth/register` - User registration
   - [ ] `POST /api/auth/login` - User login
   - [ ] `POST /api/auth/verify-email` - Email verification
-  - [ ] `POST /api/aliases` - Create new alias (fully random format)
+  - [ ] `POST /api/aliases` - Create new alias (8 char alphanumeric)
   - [ ] `GET /api/aliases` - List user's aliases
   - [ ] `DELETE /api/aliases/:id` - Delete alias
   - [ ] `GET /api/aliases/check/:alias` - Check if alias exists
@@ -110,7 +110,7 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - [ ] **P0** Update alias generation logic
   ```javascript
   // Old: generateAlias(domain) -> user+site-random@gmail.com
-  // New: generateAlias() -> 12341412341234@datavlt.io (fully random)
+  // New: generateAlias() -> a7b3x9k2@datavlt.io (8 char alphanumeric)
   ```
 - [ ] **P0** Modify storage structure
   - [ ] Add `authToken` field
