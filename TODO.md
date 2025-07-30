@@ -54,7 +54,7 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
   - [ ] `POST /api/auth/register` - User registration
   - [ ] `POST /api/auth/login` - User login
   - [ ] `POST /api/auth/verify-email` - Email verification
-  - [ ] `POST /api/aliases` - Create new alias
+  - [ ] `POST /api/aliases` - Create new alias (fully random format)
   - [ ] `GET /api/aliases` - List user's aliases
   - [ ] `DELETE /api/aliases/:id` - Delete alias
   - [ ] `GET /api/aliases/check/:alias` - Check if alias exists
@@ -75,6 +75,28 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - [ ] **P2** Add spam filtering
 - [ ] **P2** Implement email activity logging
 
+### Reply Handling (Privacy-Focused)
+- [ ] **P0** Design two-way email routing system
+  - [ ] Store original sender information securely
+  - [ ] Generate unique reply-to addresses per conversation
+  - [ ] Map reply addresses back to original senders
+- [ ] **P0** Implement outbound email processing
+  - [ ] Receive replies at special reply addresses
+  - [ ] Strip user's real email from headers
+  - [ ] Rewrite From address to use alias
+  - [ ] Forward to original sender
+- [ ] **P1** Maintain conversation threading
+  - [ ] Preserve Message-ID headers
+  - [ ] Handle In-Reply-To headers
+  - [ ] Keep References header chain
+- [ ] **P1** Handle edge cases
+  - [ ] Bounced replies
+  - [ ] Invalid reply addresses
+  - [ ] Rate limiting for replies
+- [ ] **P2** Reply analytics
+  - [ ] Track reply usage per alias
+  - [ ] Monitor conversation threads
+
 ---
 
 ## 🎨 Phase 3: Extension Modifications (Week 3-4)
@@ -88,7 +110,7 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - [ ] **P0** Update alias generation logic
   ```javascript
   // Old: generateAlias(domain) -> user+site-random@gmail.com
-  // New: generateAlias(domain) -> site-random@datavlt.io
+  // New: generateAlias() -> 12341412341234@datavlt.io (fully random)
   ```
 - [ ] **P0** Modify storage structure
   - [ ] Add `authToken` field
@@ -120,6 +142,59 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
   - [ ] Export current aliases
   - [ ] Bulk import to new system
   - [ ] Verification step
+
+---
+
+## 🎛️ Management Features (Week 3-4)
+
+### Alias Management
+- [ ] **P0** Implement alias enable/disable functionality
+  - [ ] API endpoint for toggling alias status
+  - [ ] UI toggle in extension and web dashboard
+  - [ ] Stop forwarding for disabled aliases
+- [ ] **P0** Track alias-to-site associations
+  - [ ] Store domain where alias was created
+  - [ ] Display site info in management UI
+  - [ ] Search aliases by site
+- [ ] **P1** Bulk operations
+  - [ ] Select multiple aliases
+  - [ ] Bulk enable/disable
+  - [ ] Bulk delete with confirmation
+  - [ ] Export selected aliases
+- [ ] **P1** Advanced filtering and search
+  - [ ] Filter by creation date
+  - [ ] Filter by usage frequency
+  - [ ] Filter by enabled/disabled status
+  - [ ] Full-text search across aliases
+
+### Usage Analytics
+- [ ] **P0** Basic usage statistics
+  - [ ] Emails received per alias
+  - [ ] Last activity timestamp
+  - [ ] Creation date tracking
+- [ ] **P1** Detailed analytics dashboard
+  - [ ] Daily/weekly/monthly email volume
+  - [ ] Most active aliases
+  - [ ] Spam detection rates
+  - [ ] Reply activity per alias
+- [ ] **P2** Privacy-focused insights
+  - [ ] Which sites send most emails
+  - [ ] Email frequency patterns
+  - [ ] Identify potentially compromised aliases
+
+### Spam and Security Management
+- [ ] **P0** Quick-delete aliases to block spam
+  - [ ] One-click delete from extension
+  - [ ] Immediate effect (stop forwarding)
+  - [ ] Optional "burn notice" to sender
+- [ ] **P1** Spam reporting
+  - [ ] Mark emails as spam
+  - [ ] Auto-disable aliases with high spam
+  - [ ] Shared spam intelligence (opt-in)
+- [ ] **P2** Security features
+  - [ ] Detect aliases used on multiple sites
+  - [ ] Alert on suspicious activity
+  - [ ] Alias rotation recommendations
 
 ---
 
@@ -219,6 +294,60 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - [ ] Beta testing with small group
 - [ ] Bug fixes and improvements
 - [ ] Documentation complete
+
+---
+
+## ⚠️ Edge Cases & Error Handling
+
+### User Account Edge Cases
+- [ ] **P0** Handle target email changes
+  - [ ] Update all alias mappings
+  - [ ] Verify new email ownership
+  - [ ] Queue pending emails during transition
+  - [ ] Notify user of change impact
+- [ ] **P0** Multiple users with same target email
+  - [ ] Ensure alias uniqueness across system
+  - [ ] Separate user accounts properly
+  - [ ] Handle email verification conflicts
+- [ ] **P1** Account deletion flow
+  - [ ] What happens to active aliases?
+  - [ ] Data retention policy
+  - [ ] Grace period for recovery
+
+### Email Delivery Edge Cases
+- [ ] **P0** Bounce handling
+  - [ ] Detect invalid target emails
+  - [ ] Notify user of delivery failures
+  - [ ] Automatic retry logic
+  - [ ] Disable aliases after X bounces
+- [ ] **P0** Email size limits
+  - [ ] Handle large attachments
+  - [ ] Implement size restrictions
+  - [ ] User notifications for rejected emails
+- [ ] **P1** Service downtime handling
+  - [ ] Queue emails during outages
+  - [ ] Implement fallback systems
+  - [ ] Status page for users
+
+### Alias Generation Edge Cases
+- [ ] **P0** Alias collision handling
+  - [ ] Ensure true randomness
+  - [ ] Collision detection and retry
+  - [ ] Consider increasing alias length
+- [ ] **P1** Rate limiting per user
+  - [ ] Prevent alias exhaustion attacks
+  - [ ] Fair usage policies
+  - [ ] User notifications for limits
+
+### Security Edge Cases
+- [ ] **P0** Compromised alias detection
+  - [ ] Unusual activity patterns
+  - [ ] Sudden spike in emails
+  - [ ] Geographic anomalies
+- [ ] **P1** Email spoofing prevention
+  - [ ] Strict SPF/DKIM validation
+  - [ ] Reject suspicious senders
+  - [ ] User alerts for security issues
 
 ---
 
