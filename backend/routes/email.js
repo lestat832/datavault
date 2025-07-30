@@ -9,7 +9,7 @@ const router = express.Router();
 const createTransporter = () => {
   if (process.env.SMTP_HOST) {
     // Custom SMTP (production)
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
       secure: process.env.SMTP_SECURE === 'true',
@@ -20,7 +20,7 @@ const createTransporter = () => {
     });
   } else {
     // Gmail for testing (development)
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.GMAIL_USER,
