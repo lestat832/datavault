@@ -53,10 +53,5 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Sample data for testing (remove in production)
-INSERT INTO users (email, email_verified) VALUES 
-    ('marc@marc.com', true);
-
--- Get the user ID for sample alias
-INSERT INTO aliases (alias, user_id) VALUES 
-    ('a7b3x9k2', (SELECT id FROM users WHERE email = 'marc@marc.com'));
+-- Database starts empty - users register through the API
+-- No sample data inserted for production deployment
