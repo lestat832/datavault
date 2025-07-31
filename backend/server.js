@@ -18,38 +18,43 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
+// Load modules and create app
+let express, cors, helmet, rateLimit, emailRoutes, authRoutes, aliasRoutes, logger, db, app;
+
 try {
   console.log('📦 Loading express...');
-  const express = require('express');
+  express = require('express');
   
   console.log('📦 Loading middleware...');
-  const cors = require('cors');
-  const helmet = require('helmet');
-  const rateLimit = require('express-rate-limit');
+  cors = require('cors');
+  helmet = require('helmet');
+  rateLimit = require('express-rate-limit');
   
   console.log('📦 Loading dotenv...');
   require('dotenv').config();
   
   console.log('📦 Loading routes...');
-  const emailRoutes = require('./routes/email');
-  const { router: authRoutes } = require('./routes/auth');
-  const aliasRoutes = require('./routes/aliases');
+  emailRoutes = require('./routes/email');
+  ({ router: authRoutes } = require('./routes/auth'));
+  aliasRoutes = require('./routes/aliases');
   
   console.log('📦 Loading logger...');
-  const logger = require('./utils/logger');
+  logger = require('./utils/logger');
   
   console.log('📦 Loading database...');
-  const db = require('./utils/database');
+  db = require('./utils/database');
   
   console.log('✅ All modules loaded successfully');
+  
+  console.log('🏗️  Creating Express app...');
+  app = express();
+  
 } catch (error) {
   console.error('💥 FATAL ERROR during module loading:', error);
   console.error('Stack trace:', error.stack);
   process.exit(1);
 }
 
-console.log('🏗️  Creating Express app...');
-const app = express();
 const PORT = process.env.PORT || 3000;
 
 console.log('🔧 Setting up middleware...');
