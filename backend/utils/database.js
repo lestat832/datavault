@@ -1,31 +1,98 @@
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Database connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+// Log database configuration (with masked password)
+const dbUrl = process.env.DATABASE_URL || '';
+const maskedUrl = dbUrl.replace(/:([^@]+)@/, ':****@');
+logger.info('Database configuration', {
+  url: maskedUrl,
+  nodeEnv: process.env.NODE_ENV,
+  hasUrl: !!process.env.DATABASE_URL
 });
 
-// Connection error handling
-pool.on('error', (err) => {
-  logger.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+// Create connection pool with error handling
+let pool;
+try {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000, // Increased timeout
+    // Additional debugging options
+    log: (msg) => logger.debug('PG Pool:', msg),
+  });
+  
+  logger.info('Database pool created successfully');
+} catch (error) {
+  logger.error('Failed to create database pool', { error: error.message, stack: error.stack });
+  // Don't exit immediately, let the app try to handle it
+}
+
+// Connection event handlers
+if (pool) {
+  pool.on('connect', (client) => {
+    logger.info('New database client connected');
+  });
+  
+  pool.on('acquire', (client) => {
+    logger.debug('Database client acquired from pool');
+  });
+  
+  pool.on('error', (err, client) => {
+    logger.error('Unexpected error on database client', { 
+      error: err.message, 
+      stack: err.stack,
+      code: err.code 
+    });
+    // Don't exit on connection errors in production
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(-1);
+    }
+  });
+  
+  pool.on('remove', (client) => {
+    logger.warn('Database client removed from pool');
+  });
+}
 
 // Helper function for queries
 const query = async (text, params) => {
+  if (!pool) {
+    const error = new Error('Database pool not initialized');
+    logger.error('Query attempted with no pool', { text, error: error.message });
+    throw error;
+  }
+  
   const start = Date.now();
   try {
+    logger.debug('Executing query', { text: text.substring(0, 50) + '...', paramsCount: params?.length || 0 });
+    
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    logger.debug('Executed query', { text, duration, rows: res.rowCount });
+    
+    if (!res) {
+      logger.error('Query returned undefined result', { text, duration });
+      throw new Error('Database query returned undefined');
+    }
+    
+    logger.debug('Query executed successfully', { 
+      text: text.substring(0, 50) + '...', 
+      duration, 
+      rows: res.rowCount || 0,
+      hasRows: !!(res.rows && res.rows.length > 0)
+    });
+    
     return res;
   } catch (error) {
-    logger.error('Query error', { text, error: error.message });
+    const duration = Date.now() - start;
+    logger.error('Query failed', { 
+      text: text.substring(0, 50) + '...', 
+      error: error.message, 
+      code: error.code,
+      duration,
+      stack: error.stack
+    });
     throw error;
   }
 };
@@ -128,7 +195,12 @@ const db = {
   },
   
   // Cleanup
-  end: () => pool.end()
+  end: () => pool ? pool.end() : Promise.resolve(),
+  
+  // Expose pool for diagnostics
+  get pool() {
+    return pool;
+  }
 };
 
 module.exports = db;

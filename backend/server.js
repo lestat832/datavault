@@ -58,6 +58,62 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Database test endpoint
+app.get('/test-db', async (req, res) => {
+  try {
+    logger.info('Database test endpoint called');
+    
+    // Test 1: Check if DATABASE_URL exists
+    const hasDbUrl = !!process.env.DATABASE_URL;
+    const maskedUrl = process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.replace(/:([^@]+)@/, ':****@') : 'NOT_SET';
+    
+    // Test 2: Try a simple query
+    let queryResult = null;
+    let queryError = null;
+    
+    try {
+      const result = await db.query('SELECT NOW() as current_time, version() as pg_version');
+      queryResult = {
+        success: true,
+        currentTime: result.rows[0]?.current_time,
+        pgVersion: result.rows[0]?.pg_version,
+        rowCount: result.rowCount
+      };
+    } catch (error) {
+      queryError = {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      };
+    }
+    
+    const response = {
+      status: queryResult ? 'success' : 'error',
+      timestamp: new Date().toISOString(),
+      tests: {
+        environment: {
+          hasDbUrl,
+          dbUrl: maskedUrl,
+          nodeEnv: process.env.NODE_ENV
+        },
+        query: queryResult,
+        queryError
+      }
+    };
+    
+    res.json(response);
+    
+  } catch (error) {
+    logger.error('Database test endpoint error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Routes
 app.use('/webhook', emailRoutes);
 app.use('/api/auth', authRoutes);
@@ -85,17 +141,31 @@ process.on('SIGTERM', async () => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`DataVault API server running on port ${PORT}`);
   
-  // Test database connection
-  db.query('SELECT NOW()', (err, result) => {
-    if (err) {
-      logger.error('Database connection failed:', err);
+  // Test database connection with detailed logging
+  try {
+    logger.info('Testing database connection...');
+    const result = await db.query('SELECT NOW() as server_time, version() as pg_version');
+    
+    if (result && result.rows && result.rows.length > 0) {
+      logger.info('Database connected successfully', {
+        serverTime: result.rows[0].server_time,
+        pgVersion: result.rows[0].pg_version?.substring(0, 50) + '...',
+        rowCount: result.rowCount
+      });
     } else {
-      logger.info('Database connected successfully');
+      logger.error('Database query returned no results', { result });
     }
-  });
+  } catch (err) {
+    logger.error('Database connection failed on startup', {
+      error: err.message,
+      code: err.code,
+      stack: err.stack,
+      dbUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
+    });
+  }
 });
 
 module.exports = app;
