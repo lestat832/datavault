@@ -1,24 +1,74 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+// Add crash diagnostics at the very beginning
+console.log('🚀 DataVault API starting up...');
+console.log('📍 Current working directory:', process.cwd());
+console.log('🔧 Node.js version:', process.version);
+console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
 
-const emailRoutes = require('./routes/email');
-const { router: authRoutes } = require('./routes/auth');
-const aliasRoutes = require('./routes/aliases');
-const logger = require('./utils/logger');
-const db = require('./utils/database');
+// Catch uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('💥 UNCAUGHT EXCEPTION - App will exit:', error);
+  console.error('Stack trace:', error.stack);
+  process.exit(1);
+});
 
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  console.error('Stack trace:', reason.stack);
+  process.exit(1);
+});
+
+try {
+  console.log('📦 Loading express...');
+  const express = require('express');
+  
+  console.log('📦 Loading middleware...');
+  const cors = require('cors');
+  const helmet = require('helmet');
+  const rateLimit = require('express-rate-limit');
+  
+  console.log('📦 Loading dotenv...');
+  require('dotenv').config();
+  
+  console.log('📦 Loading routes...');
+  const emailRoutes = require('./routes/email');
+  const { router: authRoutes } = require('./routes/auth');
+  const aliasRoutes = require('./routes/aliases');
+  
+  console.log('📦 Loading logger...');
+  const logger = require('./utils/logger');
+  
+  console.log('📦 Loading database...');
+  const db = require('./utils/database');
+  
+  console.log('✅ All modules loaded successfully');
+} catch (error) {
+  console.error('💥 FATAL ERROR during module loading:', error);
+  console.error('Stack trace:', error.stack);
+  process.exit(1);
+}
+
+console.log('🏗️  Creating Express app...');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['chrome-extension://*'],
-  credentials: true
-}));
+console.log('🔧 Setting up middleware...');
+try {
+  // Security middleware
+  console.log('🛡️  Adding helmet...');
+  app.use(helmet());
+  
+  console.log('🌐 Adding CORS...');
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['chrome-extension://*'],
+    credentials: true
+  }));
+  
+  console.log('✅ Security middleware configured');
+} catch (error) {
+  console.error('💥 Error setting up security middleware:', error);
+  process.exit(1);
+}
 
 // Rate limiting
 const limiter = rateLimit({
@@ -140,32 +190,57 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// Start server
-app.listen(PORT, async () => {
-  logger.info(`DataVault API server running on port ${PORT}`);
-  
-  // Test database connection with detailed logging
-  try {
-    logger.info('Testing database connection...');
-    const result = await db.query('SELECT NOW() as server_time, version() as pg_version');
+// Start server with comprehensive error handling
+console.log(`🚀 Starting server on port ${PORT}...`);
+
+try {
+  const server = app.listen(PORT, async () => {
+    console.log(`✅ Server listening on port ${PORT}`);
+    console.log(`🌐 Server should be accessible at http://localhost:${PORT}`);
     
-    if (result && result.rows && result.rows.length > 0) {
-      logger.info('Database connected successfully', {
-        serverTime: result.rows[0].server_time,
-        pgVersion: result.rows[0].pg_version?.substring(0, 50) + '...',
-        rowCount: result.rowCount
+    try {
+      logger.info(`DataVault API server running on port ${PORT}`);
+      
+      // Test database connection with detailed logging
+      console.log('🔍 Testing database connection...');
+      logger.info('Testing database connection...');
+      
+      const result = await db.query('SELECT NOW() as server_time, version() as pg_version');
+      
+      if (result && result.rows && result.rows.length > 0) {
+        console.log('✅ Database connected successfully!');
+        logger.info('Database connected successfully', {
+          serverTime: result.rows[0].server_time,
+          pgVersion: result.rows[0].pg_version?.substring(0, 50) + '...',
+          rowCount: result.rowCount
+        });
+      } else {
+        console.error('❌ Database query returned no results');
+        logger.error('Database query returned no results', { result });
+      }
+    } catch (err) {
+      console.error('❌ Database connection failed:', err.message);
+      logger.error('Database connection failed on startup', {
+        error: err.message,
+        code: err.code,
+        stack: err.stack,
+        dbUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
       });
-    } else {
-      logger.error('Database query returned no results', { result });
     }
-  } catch (err) {
-    logger.error('Database connection failed on startup', {
-      error: err.message,
-      code: err.code,
-      stack: err.stack,
-      dbUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
-    });
-  }
-});
+  });
+  
+  // Handle server errors
+  server.on('error', (error) => {
+    console.error('💥 Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use`);
+    }
+    process.exit(1);
+  });
+  
+} catch (error) {
+  console.error('💥 Failed to start server:', error);
+  process.exit(1);
+}
 
 module.exports = app;

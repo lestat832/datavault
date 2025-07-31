@@ -1,14 +1,42 @@
+console.log('📊 Loading database module...');
+
 const { Pool } = require('pg');
-const logger = require('./logger');
+
+// Try to load logger, but don't crash if it fails
+let logger;
+try {
+  logger = require('./logger');
+  console.log('✅ Logger loaded successfully');
+} catch (error) {
+  console.error('⚠️  Logger failed to load, using console:', error.message);
+  // Fallback logger
+  logger = {
+    info: console.log,
+    error: console.error,
+    debug: console.log,
+    warn: console.warn
+  };
+}
 
 // Log database configuration (with masked password)
+console.log('🔍 Checking database configuration...');
 const dbUrl = process.env.DATABASE_URL || '';
-const maskedUrl = dbUrl.replace(/:([^@]+)@/, ':****@');
-logger.info('Database configuration', {
-  url: maskedUrl,
-  nodeEnv: process.env.NODE_ENV,
-  hasUrl: !!process.env.DATABASE_URL
-});
+console.log('📍 DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('📍 DATABASE_URL length:', dbUrl.length);
+
+if (dbUrl) {
+  const maskedUrl = dbUrl.replace(/:([^@]+)@/, ':****@');
+  console.log('🔗 Database URL (masked):', maskedUrl);
+  
+  logger.info('Database configuration', {
+    url: maskedUrl,
+    nodeEnv: process.env.NODE_ENV,
+    hasUrl: !!process.env.DATABASE_URL
+  });
+} else {
+  console.error('❌ DATABASE_URL is not set!');
+  logger.error('DATABASE_URL environment variable is not set');
+}
 
 // Create connection pool with error handling
 let pool;
