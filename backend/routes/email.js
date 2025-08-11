@@ -85,8 +85,17 @@ router.post('/email', async (req, res) => {
     const toAddress = Array.isArray(to) ? to[0] : to;
     const aliasName = toAddress.split('@')[0].toLowerCase();
     
-    // Look up alias in database
-    const aliasData = await db.getAliasByName(aliasName);
+    // TEMPORARY: Skip database lookup and hardcode email for testing
+    logger.info('TEMP: Bypassing database lookup for testing', { aliasName });
+    const aliasData = {
+      alias: aliasName,
+      user_id: 'temp-user',
+      user_email: 'marc.geraldez@gmail.com', // HARDCODED for testing
+      is_active: true
+    };
+    
+    // Look up alias in database (commented out for testing)
+    // const aliasData = await db.getAliasByName(aliasName);
     
     if (!aliasData) {
       logger.warn('Alias not found', { alias: aliasName, to, from });
@@ -110,11 +119,14 @@ router.post('/email', async (req, res) => {
       attachments
     });
     
-    // Update alias usage statistics
-    await db.updateAliasUsage(aliasName);
+    // TEMPORARY: Skip database operations for testing
+    logger.info('TEMP: Skipping database operations for testing');
     
-    // Log successful forward
-    await db.logEmail(aliasName, from, subject, aliasData.user_email, 'delivered');
+    // Update alias usage statistics (commented out for testing)
+    // await db.updateAliasUsage(aliasName);
+    
+    // Log successful forward (commented out for testing)
+    // await db.logEmail(aliasName, from, subject, aliasData.user_email, 'delivered');
     
     res.json({ success: true, message: 'Email forwarded successfully' });
     
