@@ -44,25 +44,46 @@ transporter.verify((error, success) => {
 // Cloudflare Email Routing webhook
 router.post('/email', async (req, res) => {
   try {
-    logger.info('Received email webhook', { body: req.body });
+    logger.info('Received email webhook', { 
+      headers: req.headers,
+      bodyKeys: Object.keys(req.body) 
+    });
     
-    // Extract email data from Cloudflare webhook
-    const {
-      to,
-      from,
-      subject,
-      'content-plain': textContent,
-      'content-html': htmlContent,
-      attachments
-    } = req.body;
+    // Handle both Cloudflare Worker format and direct format
+    let to, from, subject, textContent, htmlContent, attachments;
+    
+    if (req.headers['x-cloudflare-email']) {
+      // New Cloudflare Worker format
+      const { to: toAddr, from: fromAddr, subject: subj, rawEmail, headers } = req.body;
+      to = toAddr;
+      from = fromAddr;
+      subject = subj || headers?.subject || 'No Subject';
+      
+      // Parse raw email for content if needed
+      if (rawEmail) {
+        // For now, use rawEmail as text content
+        // In production, you'd want to parse MIME properly
+        textContent = `Email from ${from}\n\n${rawEmail.substring(0, 1000)}`;
+        htmlContent = textContent.replace(/\n/g, '<br>');
+      }
+    } else {
+      // Original format (for backward compatibility)
+      to = req.body.to;
+      from = req.body.from;
+      subject = req.body.subject;
+      textContent = req.body['content-plain'] || req.body.textContent;
+      htmlContent = req.body['content-html'] || req.body.htmlContent;
+      attachments = req.body.attachments;
+    }
     
     if (!to || !from) {
       logger.error('Missing required email fields', { to, from });
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    // Extract alias from email address
-    const aliasName = to.split('@')[0];
+    // Extract alias from email address (handle both string and array)
+    const toAddress = Array.isArray(to) ? to[0] : to;
+    const aliasName = toAddress.split('@')[0].toLowerCase();
     
     // Look up alias in database
     const aliasData = await db.getAliasByName(aliasName);
