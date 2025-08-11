@@ -4,10 +4,9 @@
 -- IMPORTANT: Replace 'YOUR-EMAIL@gmail.com' with your actual email address!
 
 -- Step 1: Create a test user
-INSERT INTO users (email, password_hash, email_verified, created_at)
+INSERT INTO users (email, email_verified, created_at)
 VALUES (
   'YOUR-EMAIL@gmail.com',  -- ← CHANGE THIS TO YOUR EMAIL!
-  '$2b$10$rBYPkUa.qKeKh9FbJGkJHuOp7tEaXCwRRgJGvPMHekdxGPwtFU8Vy', -- password: testpassword123
   true,
   NOW()
 )

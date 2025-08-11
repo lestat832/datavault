@@ -2,12 +2,10 @@
 -- Run this in Supabase SQL Editor to create test data for email forwarding
 
 -- 1. Create a test user (replace with your actual email)
--- Note: The password_hash is a bcrypt hash of 'testpassword123'
--- In production, use proper password hashing via the API
-INSERT INTO users (email, password_hash, email_verified, created_at)
+-- For now, we're not using authentication, just email forwarding
+INSERT INTO users (email, email_verified, created_at)
 VALUES (
   'your-email@gmail.com',  -- CHANGE THIS TO YOUR EMAIL
-  '$2b$10$rBYPkUa.qKeKh9FbJGkJHuOp7tEaXCwRRgJGvPMHekdxGPwtFU8Vy',
   true,
   NOW()
 )
