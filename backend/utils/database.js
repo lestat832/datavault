@@ -23,16 +23,31 @@ console.log('🔍 Checking database configuration...');
 const dbUrl = process.env.DATABASE_URL || '';
 console.log('📍 DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('📍 DATABASE_URL length:', dbUrl.length);
+console.log('📍 First 50 chars:', dbUrl.substring(0, 50) + '...');
 
+// Extra debugging for Railway
 if (dbUrl) {
-  const maskedUrl = dbUrl.replace(/:([^@]+)@/, ':****@');
-  console.log('🔗 Database URL (masked):', maskedUrl);
-  
-  logger.info('Database configuration', {
-    url: maskedUrl,
-    nodeEnv: process.env.NODE_ENV,
-    hasUrl: !!process.env.DATABASE_URL
-  });
+  try {
+    const url = new URL(dbUrl);
+    console.log('🔗 Database host:', url.hostname);
+    console.log('🔗 Database port:', url.port);
+    console.log('🔗 Database name:', url.pathname);
+    
+    const maskedUrl = dbUrl.replace(/:([^@]+)@/, ':****@');
+    console.log('🔗 Full Database URL (masked):', maskedUrl);
+    
+    logger.info('Database configuration', {
+      url: maskedUrl,
+      host: url.hostname,
+      port: url.port,
+      database: url.pathname,
+      nodeEnv: process.env.NODE_ENV,
+      hasUrl: !!process.env.DATABASE_URL
+    });
+  } catch (urlError) {
+    console.error('❌ Failed to parse DATABASE_URL:', urlError.message);
+    console.error('❌ Raw DATABASE_URL value:', dbUrl);
+  }
 } else {
   console.error('❌ DATABASE_URL is not set!');
   logger.error('DATABASE_URL environment variable is not set');

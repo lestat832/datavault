@@ -1,0 +1,8 @@
+{
+  "DATABASE_URL": "postgresql://postgres:l2P4LyLBuBrQCT@db.izapjslkbzwqvqgxcffx.supabase.co:5432/postgres",
+  "NODE_ENV": "production",
+  "PORT": "3000",
+  "JWT_SECRET": "your-super-secret-jwt-key-change-in-production",
+  "GMAIL_USER": "marc.geraldez@gmail.com",
+  "GMAIL_APP_PASSWORD": "zeyv pewm cncw uryr"
+}

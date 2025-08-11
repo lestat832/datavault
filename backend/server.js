@@ -104,12 +104,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check
+// Health check (no database required)
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      hasDatabase: !!process.env.DATABASE_URL,
+      dbLength: process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0,
+      port: process.env.PORT || 3000
+    }
   });
 });
 
