@@ -85,48 +85,38 @@ router.post('/email', async (req, res) => {
     const toAddress = Array.isArray(to) ? to[0] : to;
     const aliasName = toAddress.split('@')[0].toLowerCase();
     
-    // TEMPORARY: Skip database lookup and hardcode email for testing
-    logger.info('TEMP: Bypassing database lookup for testing', { aliasName });
-    const aliasData = {
-      alias: aliasName,
-      user_id: 'temp-user',
-      user_email: 'marc.geraldez@gmail.com', // HARDCODED for testing
-      is_active: true
-    };
-    
-    // Look up alias in database (commented out for testing)
-    // const aliasData = await db.getAliasByName(aliasName);
-    
-    if (!aliasData) {
-      logger.warn('Alias not found', { alias: aliasName, to, from });
-      return res.status(404).json({ error: 'Alias not found' });
-    }
-    
-    if (!aliasData.is_active) {
-      logger.warn('Alias is disabled', { alias: aliasName, to, from });
-      return res.status(403).json({ error: 'Alias disabled' });
-    }
-    
-    // Forward email to user
-    await forwardEmail({
-      alias: aliasName,
-      originalTo: to,
-      targetEmail: aliasData.user_email,
+    // TEMPORARY BYPASS: Skip ALL database operations and forward directly
+    logger.info('TEMP BYPASS: Skipping all database operations and forwarding directly', { 
+      aliasName, 
       from,
-      subject,
-      textContent,
-      htmlContent,
-      attachments
+      subject: subject || 'No Subject'
     });
     
-    // TEMPORARY: Skip database operations for testing
-    logger.info('TEMP: Skipping database operations for testing');
-    
-    // Update alias usage statistics (commented out for testing)
-    // await db.updateAliasUsage(aliasName);
-    
-    // Log successful forward (commented out for testing)
-    // await db.logEmail(aliasName, from, subject, aliasData.user_email, 'delivered');
+    try {
+      // Forward email directly to hardcoded address
+      await forwardEmail({
+        alias: aliasName,
+        originalTo: to,
+        targetEmail: 'marc.geraldez@gmail.com', // HARDCODED for testing
+        from,
+        subject,
+        textContent,
+        htmlContent,
+        attachments
+      });
+      
+      logger.info('TEMP: Email forwarded successfully without database', { 
+        aliasName,
+        targetEmail: 'marc.geraldez@gmail.com' 
+      });
+      
+    } catch (forwardError) {
+      logger.error('TEMP: Email forwarding failed', { 
+        error: forwardError.message,
+        stack: forwardError.stack 
+      });
+      throw forwardError;
+    }
     
     res.json({ success: true, message: 'Email forwarded successfully' });
     
