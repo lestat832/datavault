@@ -133,7 +133,7 @@ router.post('/email', async (req, res) => {
   }
 });
 
-// Forward email function
+// Forward email function with detailed logging
 async function forwardEmail({
   alias,
   originalTo,
@@ -145,12 +145,31 @@ async function forwardEmail({
   attachments
 }) {
   try {
+    logger.info('DETAILED: Starting forwardEmail function', {
+      alias,
+      originalTo,
+      targetEmail,
+      from,
+      subject: subject || 'No Subject',
+      hasTextContent: !!textContent,
+      hasHtmlContent: !!htmlContent,
+      hasAttachments: !!(attachments && attachments.length > 0)
+    });
+
+    // Check if transporter exists
+    if (!transporter) {
+      logger.error('DETAILED: Email transporter not initialized!');
+      throw new Error('Email transporter not initialized');
+    }
+
+    logger.info('DETAILED: Transporter exists, creating mail options');
+
     const mailOptions = {
       from: `DataVault <noreply@datavlt.io>`,
       to: targetEmail,
-      subject: subject,
-      text: textContent,
-      html: htmlContent,
+      subject: subject || 'No Subject',
+      text: textContent || `Email forwarded from ${from}`,
+      html: htmlContent || `<p>Email forwarded from ${from}</p>`,
       replyTo: from,
       headers: {
         'X-DataVault-Alias': alias,
@@ -159,8 +178,16 @@ async function forwardEmail({
       }
     };
     
+    logger.info('DETAILED: Mail options created', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      replyTo: mailOptions.replyTo
+    });
+
     // Handle attachments if present
     if (attachments && attachments.length > 0) {
+      logger.info('DETAILED: Processing attachments', { count: attachments.length });
       mailOptions.attachments = attachments.map(att => ({
         filename: att.filename,
         content: att.content,
@@ -168,20 +195,26 @@ async function forwardEmail({
       }));
     }
     
+    logger.info('DETAILED: About to send email via transporter');
     const info = await transporter.sendMail(mailOptions);
-    logger.info('Email forwarded successfully', { 
+    
+    logger.info('DETAILED: Email sent successfully!', { 
       alias, 
       targetEmail, 
-      messageId: info.messageId 
+      messageId: info.messageId,
+      response: info.response
     });
     
     return info;
     
   } catch (error) {
-    logger.error('Failed to forward email', { 
+    logger.error('DETAILED: Failed to forward email', { 
       alias, 
       targetEmail, 
-      error: error.message 
+      error: error.message,
+      stack: error.stack,
+      code: error.code,
+      command: error.command
     });
     throw error;
   }
