@@ -1,8 +1,12 @@
 /**
  * DataVault Email Forwarding Worker for Cloudflare
  * 
- * This worker receives emails sent to @datavlt.io addresses and forwards
+ * This worker receives ALL emails sent to @datavlt.io addresses and forwards
  * them to the Railway backend webhook for processing.
+ * 
+ * Note: Even though the Email Worker route is set to "catch-all@datavlt.io",
+ * this worker actually receives ALL emails to any address @datavlt.io
+ * (e.g., test1234@datavlt.io, demo5678@datavlt.io, etc.)
  * 
  * Deploy this to Cloudflare Workers and connect it to Email Routing.
  */
