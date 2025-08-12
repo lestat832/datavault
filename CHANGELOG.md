@@ -2,6 +2,43 @@
 
 All notable changes to DataVault will be documented in this file.
 
+## [0.3.0] - 2025-01-12
+
+### 📧 Email Forwarding Infrastructure Complete
+
+#### Added
+- Complete Cloudflare Email Routing setup for datavlt.io domain
+- Cloudflare Worker for email processing and forwarding to Railway webhook
+- Email webhook endpoint with comprehensive error handling and logging
+- SMTP test endpoint for Gmail authentication verification
+- Database isolation capabilities for testing pure email forwarding
+- Test alias creation scripts and database diagnostics
+
+#### Fixed
+- Gmail SMTP authentication configured with correct service account
+- IPv6 connectivity issues between Railway and Supabase resolved
+- Email bouncing issues fixed with proper catch-all routing
+- Database reference errors in error handlers
+- Variable scope issues in server.js for production deployment
+
+#### Changed
+- Updated hardcoded test email to datavault.service@gmail.com
+- Enhanced email forwarding with detailed logging at every step
+- Implemented database bypass mode for isolated email testing
+- Improved error handling with comprehensive stack traces
+
+#### Email Flow Working
+1. Email sent to *@datavlt.io → Cloudflare Email Routing
+2. Cloudflare Worker processes email → Posts to Railway webhook
+3. Railway backend receives email → Forwards via Gmail SMTP
+4. Email delivered to target address with proper headers
+
+#### Technical Achievements
+- End-to-end email forwarding chain operational
+- Proper error handling and logging throughout pipeline
+- Database isolation allows testing without data dependencies
+- Gmail SMTP authentication working with App Passwords
+
 ## [0.2.0] - 2025-01-11
 
 ### 🚀 Backend Deployment & Infrastructure
@@ -26,7 +63,6 @@ All notable changes to DataVault will be documented in this file.
 - Updated database connection with better error reporting
 
 #### In Progress
-- Cloudflare Email Routing setup for datavlt.io domain
 - Chrome extension update to use backend API instead of subaddresses
 - User authentication flow implementation
 

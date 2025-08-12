@@ -97,7 +97,7 @@ router.post('/email', async (req, res) => {
       await forwardEmail({
         alias: aliasName,
         originalTo: to,
-        targetEmail: 'marc.geraldez@gmail.com', // HARDCODED for testing
+        targetEmail: 'datavault.service@gmail.com', // HARDCODED for testing
         from,
         subject,
         textContent,
@@ -107,7 +107,7 @@ router.post('/email', async (req, res) => {
       
       logger.info('TEMP: Email forwarded successfully without database', { 
         aliasName,
-        targetEmail: 'marc.geraldez@gmail.com' 
+        targetEmail: 'datavault.service@gmail.com' 
       });
       
     } catch (forwardError) {
