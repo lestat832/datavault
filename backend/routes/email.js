@@ -123,11 +123,8 @@ router.post('/email', async (req, res) => {
   } catch (error) {
     logger.error('Email forwarding error:', error);
     
-    // Log failed forward if we have enough info
-    if (req.body.to && req.body.from) {
-      const aliasName = req.body.to.split('@')[0];
-      await db.logEmail(aliasName, req.body.from, req.body.subject || '', '', 'failed').catch(() => {});
-    }
+    // TEMP: Skip database logging for testing
+    logger.info('TEMP: Skipping error logging due to database bypass');
     
     res.status(500).json({ error: 'Email forwarding failed' });
   }
