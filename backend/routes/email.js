@@ -1,6 +1,6 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
-const db = require('../utils/database');
+// const db = require('../utils/database'); // TEMPORARILY DISABLED for testing
 const logger = require('../utils/logger');
 
 const router = express.Router();

@@ -34,15 +34,15 @@ try {
   require('dotenv').config();
   
   console.log('📦 Loading routes...');
-  emailRoutes = require('./routes/email');
-  ({ router: authRoutes } = require('./routes/auth'));
-  aliasRoutes = require('./routes/aliases');
+  emailRoutes = require('./routes/email'); // Email forwarding only
+  // ({ router: authRoutes } = require('./routes/auth')); // TEMPORARILY DISABLED
+  // aliasRoutes = require('./routes/aliases'); // TEMPORARILY DISABLED
   
   console.log('📦 Loading logger...');
   logger = require('./utils/logger');
   
-  console.log('📦 Loading database...');
-  db = require('./utils/database');
+  console.log('📦 TEMP: Skipping database loading for testing...');
+  // db = require('./utils/database'); // TEMPORARILY DISABLED
   
   console.log('✅ All modules loaded successfully');
   
@@ -119,66 +119,19 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Database test endpoint
+// Database test endpoint (DISABLED for testing)
 app.get('/test-db', async (req, res) => {
-  try {
-    logger.info('Database test endpoint called');
-    
-    // Test 1: Check if DATABASE_URL exists
-    const hasDbUrl = !!process.env.DATABASE_URL;
-    const maskedUrl = process.env.DATABASE_URL ? 
-      process.env.DATABASE_URL.replace(/:([^@]+)@/, ':****@') : 'NOT_SET';
-    
-    // Test 2: Try a simple query
-    let queryResult = null;
-    let queryError = null;
-    
-    try {
-      const result = await db.query('SELECT NOW() as current_time, version() as pg_version');
-      queryResult = {
-        success: true,
-        currentTime: result.rows[0]?.current_time,
-        pgVersion: result.rows[0]?.pg_version,
-        rowCount: result.rowCount
-      };
-    } catch (error) {
-      queryError = {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      };
-    }
-    
-    const response = {
-      status: queryResult ? 'success' : 'error',
-      timestamp: new Date().toISOString(),
-      tests: {
-        environment: {
-          hasDbUrl,
-          dbUrl: maskedUrl,
-          nodeEnv: process.env.NODE_ENV
-        },
-        query: queryResult,
-        queryError
-      }
-    };
-    
-    res.json(response);
-    
-  } catch (error) {
-    logger.error('Database test endpoint error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error.message,
-      stack: error.stack
-    });
-  }
+  res.json({
+    status: 'disabled',
+    message: 'Database testing temporarily disabled',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Routes
-app.use('/webhook', emailRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/aliases', aliasRoutes);
+// Routes (database-dependent routes temporarily disabled)
+app.use('/webhook', emailRoutes); // Email forwarding only
+// app.use('/api/auth', authRoutes); // TEMPORARILY DISABLED
+// app.use('/api/aliases', aliasRoutes); // TEMPORARILY DISABLED
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -194,10 +147,10 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Graceful shutdown
+// Graceful shutdown (database disabled)
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  await db.end();
+  // await db.end(); // TEMPORARILY DISABLED
   process.exit(0);
 });
 
@@ -212,31 +165,11 @@ try {
     try {
       logger.info(`DataVault API server running on port ${PORT}`);
       
-      // Test database connection with detailed logging
-      console.log('🔍 Testing database connection...');
-      logger.info('Testing database connection...');
-      
-      const result = await db.query('SELECT NOW() as server_time, version() as pg_version');
-      
-      if (result && result.rows && result.rows.length > 0) {
-        console.log('✅ Database connected successfully!');
-        logger.info('Database connected successfully', {
-          serverTime: result.rows[0].server_time,
-          pgVersion: result.rows[0].pg_version?.substring(0, 50) + '...',
-          rowCount: result.rowCount
-        });
-      } else {
-        console.error('❌ Database query returned no results');
-        logger.error('Database query returned no results', { result });
-      }
+      // TEMP: Database connection test disabled
+      console.log('⏭️ Skipping database connection test for email forwarding test...');
+      logger.info('Database connection test temporarily disabled');
     } catch (err) {
-      console.error('❌ Database connection failed:', err.message);
-      logger.error('Database connection failed on startup', {
-        error: err.message,
-        code: err.code,
-        stack: err.stack,
-        dbUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
-      });
+      console.log('⚠️ Startup completed (database disabled for testing)');
     }
   });
   
