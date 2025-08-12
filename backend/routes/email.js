@@ -217,6 +217,51 @@ async function forwardEmail({
   }
 }
 
+// SMTP test endpoint
+router.get('/test-smtp', async (req, res) => {
+  try {
+    logger.info('Testing SMTP connection...');
+    
+    // Test transporter configuration
+    if (!transporter) {
+      return res.status(500).json({ error: 'Transporter not initialized' });
+    }
+    
+    // Test basic connection
+    logger.info('Verifying SMTP connection...');
+    const verified = await transporter.verify();
+    
+    if (verified) {
+      logger.info('SMTP connection successful!');
+      res.json({ 
+        success: true, 
+        message: 'SMTP connection verified',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      logger.error('SMTP verification failed');
+      res.status(500).json({ 
+        success: false, 
+        message: 'SMTP verification failed' 
+      });
+    }
+    
+  } catch (error) {
+    logger.error('SMTP test failed:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      stack: error.stack
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      code: error.code 
+    });
+  }
+});
+
 // Test endpoint for development
 router.post('/test', async (req, res) => {
   if (process.env.NODE_ENV === 'production') {
