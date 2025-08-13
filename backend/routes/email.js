@@ -1,5 +1,6 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
+const { simpleParser } = require('mailparser');
 // const db = require('../utils/database'); // TEMPORARILY DISABLED for testing
 const logger = require('../utils/logger');
 
@@ -57,14 +58,44 @@ router.post('/email', async (req, res) => {
       const { to: toAddr, from: fromAddr, subject: subj, rawEmail, headers } = req.body;
       to = toAddr;
       from = fromAddr;
-      subject = subj || headers?.subject || 'No Subject';
       
       // Parse raw email for content if needed
       if (rawEmail) {
-        // For now, use rawEmail as text content
-        // In production, you'd want to parse MIME properly
-        textContent = `Email from ${from}\n\n${rawEmail.substring(0, 1000)}`;
-        htmlContent = textContent.replace(/\n/g, '<br>');
+        try {
+          // Parse the raw email using mailparser
+          const parsed = await simpleParser(rawEmail);
+          
+          // Use the parsed content
+          subject = parsed.subject || subj || headers?.subject || 'No Subject';
+          textContent = parsed.text || `Email from ${from}`;
+          htmlContent = parsed.html || parsed.textAsHtml || `<p>Email from ${from}</p>`;
+          
+          // Handle attachments if present
+          if (parsed.attachments && parsed.attachments.length > 0) {
+            attachments = parsed.attachments.map(att => ({
+              filename: att.filename,
+              content: att.content,
+              contentType: att.contentType
+            }));
+          }
+          
+          logger.info('Email parsed successfully', {
+            subject,
+            hasText: !!parsed.text,
+            hasHtml: !!parsed.html,
+            attachmentCount: parsed.attachments ? parsed.attachments.length : 0
+          });
+        } catch (parseError) {
+          logger.error('Failed to parse email', { error: parseError.message });
+          // Fallback to basic parsing
+          subject = subj || headers?.subject || 'No Subject';
+          textContent = `Email from ${from}\n\n${rawEmail.substring(0, 1000)}`;
+          htmlContent = textContent.replace(/\n/g, '<br>');
+        }
+      } else {
+        subject = subj || headers?.subject || 'No Subject';
+        textContent = `Email from ${from}`;
+        htmlContent = `<p>Email from ${from}</p>`;
       }
     } else {
       // Original format (for backward compatibility)
