@@ -2,6 +2,30 @@
 
 All notable changes to DataVault will be documented in this file.
 
+## [0.3.1] - 2025-01-12
+
+### ✨ Email Content Parsing & Complete System Verification
+
+#### Added
+- Mailparser library for proper MIME email parsing
+- Clean email content extraction from raw email data
+- Attachment handling support in email forwarding
+
+#### Fixed
+- Email content now displays properly formatted text instead of raw headers
+- Original email subjects preserved in forwarded emails
+- HTML and plain text content correctly extracted
+
+#### Verified Working
+- **End-to-end email forwarding fully operational and tested**
+- Emails to any alias @datavlt.io are successfully:
+  - Received by Cloudflare Email Routing
+  - Processed by Cloudflare Worker
+  - Forwarded to Railway webhook
+  - Parsed for clean content display
+  - Delivered via Gmail SMTP with proper formatting
+- Reply-To headers correctly set to original sender
+
 ## [0.3.0] - 2025-01-12
 
 ### 📧 Email Forwarding Infrastructure Complete
