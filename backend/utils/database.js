@@ -56,38 +56,48 @@ if (dbUrl) {
 // Create connection pool with error handling
 let pool;
 
-// Create pool using the dbUrl already declared and validated above
+// Railway IPv6 compatibility - try to use direct connection instead of pooler
 if (dbUrl) {
   try {
-    // Use the already parsed URL from above, or reparse for pool config
     const url = new URL(dbUrl);
-    const isPooler = url.port === '6543';
+    let workingUrl = dbUrl;
+    let connectionType = 'pooler';
+    
+    // If this is a pooler connection (port 6543), try switching to direct (port 5432)
+    if (url.port === '6543') {
+      // Create direct connection URL as fallback for IPv6 issues
+      const directUrl = new URL(dbUrl);
+      directUrl.port = '5432';
+      workingUrl = directUrl.toString();
+      connectionType = 'direct';
+      
+      logger.warn('Switching from pooler to direct connection for Railway IPv6 compatibility', {
+        originalPort: '6543',
+        newPort: '5432',
+        hostname: url.hostname
+      });
+    }
     
     logger.info('Creating database pool', { 
-      host: url.hostname,
-      port: url.port,
-      isPooler,
+      hostname: url.hostname,
+      port: url.port === '6543' ? '5432' : url.port,
+      connectionType,
       database: url.pathname.slice(1)
     });
-    
-    // Create pool with Supabase-compatible settings
+
+    // Create pool with direct connection for better Railway compatibility
     pool = new Pool({
-      connectionString: dbUrl,
+      connectionString: workingUrl,
       ssl: { 
         rejectUnauthorized: false,
-        // Supabase requires SSL
         require: true
       },
-      // Force IPv4 connections (Railway doesn't support IPv6)
-      family: 4,
-      max: 10, // Reduced for free tier
+      max: 5, // Reduced for direct connections
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000, // Increased timeout for Supabase
-      // Add pgbouncer mode for pooler connections
-      ...(isPooler && { 
-        statement_timeout: 60000,
-        query_timeout: 60000 
-      })
+      connectionTimeoutMillis: 15000, // Longer timeout for direct connections
+      // Remove pooler-specific options for direct connection
+      statement_timeout: 30000,
+      query_timeout: 30000
     });
     
     logger.info('Database pool created successfully');
