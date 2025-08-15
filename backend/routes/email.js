@@ -119,7 +119,20 @@ router.post('/email', async (req, res) => {
     // Look up alias in database
     logger.info('Looking up alias in database', { aliasName });
     
-    const aliasData = await db.getAliasByName(aliasName);
+    let aliasData;
+    try {
+      aliasData = await db.getAliasByName(aliasName);
+    } catch (dbError) {
+      logger.error('Database lookup failed', { 
+        error: dbError.message,
+        code: dbError.code,
+        aliasName 
+      });
+      return res.status(500).json({ 
+        error: 'Database connection error',
+        details: dbError.message 
+      });
+    }
     
     if (!aliasData) {
       logger.warn('Alias not found', { aliasName });

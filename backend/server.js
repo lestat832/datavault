@@ -119,13 +119,25 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Database test endpoint (DISABLED for testing)
+// Database test endpoint
 app.get('/test-db', async (req, res) => {
-  res.json({
-    status: 'disabled',
-    message: 'Database testing temporarily disabled',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    const result = await db.query('SELECT NOW() as time, COUNT(*) as user_count FROM users');
+    res.json({
+      status: 'connected',
+      message: 'Database connection successful',
+      timestamp: result.rows[0].time,
+      userCount: result.rows[0].user_count
+    });
+  } catch (error) {
+    logger.error('Database test failed:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Database connection failed',
+      error: error.message,
+      code: error.code
+    });
+  }
 });
 
 // Routes (database-dependent routes temporarily disabled)
