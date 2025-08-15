@@ -2,6 +2,40 @@
 
 All notable changes to DataVault will be documented in this file.
 
+## [0.4.0] - 2025-08-15
+
+### 🔗 Database Integration & Railway IPv6 Troubleshooting
+
+#### Added
+- Complete database integration for email forwarding
+- Real-time alias lookups from Supabase database
+- Email activity logging and usage statistics
+- Database connection testing and diagnostics
+- IPv4 compatibility layer for Railway deployment
+
+#### Fixed
+- Re-enabled database module in server.js (was disabled for testing)
+- Fixed duplicate variable declaration causing deployment crashes
+- Added comprehensive database error handling
+- Implemented IPv4-only connection strategy for Railway/Supabase compatibility
+
+#### Database Features
+- User and alias management with PostgreSQL/Supabase
+- Email forwarding now uses real database lookups instead of hardcoded addresses
+- Proper 404/403 responses for non-existent or disabled aliases
+- Email activity tracking with sender, subject, and delivery status
+
+#### Current Status
+- ✅ Email forwarding infrastructure complete
+- ✅ Database schema and test data created
+- 🔄 **IN PROGRESS**: Resolving Railway IPv6 connectivity to Supabase
+- 📧 Test aliases available: test1234@, demo5678@, mail9012@, hello123@, info4567@datavlt.io
+
+#### Known Issues
+- Railway platform has IPv6 connectivity issues with Supabase
+- Implemented workaround switching from pooler (port 6543) to direct connection (port 5432)
+- Database connection testing shows ENETUNREACH errors on IPv6 addresses
+
 ## [0.3.1] - 2025-01-12
 
 ### ✨ Email Content Parsing & Complete System Verification

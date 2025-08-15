@@ -8,9 +8,8 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - **Timeline**: 6-8 weeks for full implementation
 - **MVP Target**: 2-3 weeks
 
-## 🎉 Recent Progress (2025-01-12)
+## 🎉 Recent Progress (2025-08-15)
 - ✅ Backend API successfully deployed to Railway
-- ✅ Database connection working with Supabase PostgreSQL
 - ✅ All deployment bugs fixed (nodemailer, Express router, variable scope)
 - ✅ Health check and database test endpoints functional
 - ✅ **MAJOR:** Complete email forwarding infrastructure working end-to-end
@@ -19,8 +18,37 @@ Transitioning from email subaddresses to custom domain (datavlt.io)
 - ✅ Gmail SMTP authentication working with datavault.service@gmail.com
 - ✅ Email forwarding chain: Email → Cloudflare → Worker → Railway → Gmail
 - ✅ Proper email content parsing with mailparser library
-- ✅ **VERIFIED:** Full end-to-end email forwarding tested and working perfectly
-- 🔄 Next: Re-enable database integration for user alias lookups
+- ✅ **Database integration implemented**: Email forwarding uses real database lookups
+- ✅ Test database setup with 5 aliases: test1234@, demo5678@, mail9012@, hello123@, info4567@datavlt.io
+- 🔄 **CURRENT BLOCKER:** Railway IPv6 connectivity issue with Supabase database
+- 🛠️ **ATTEMPTED FIXES:** family: 4, direct connection (port 5432), DNS resolution
+- 📋 Next: Resolve IPv6 issue or find alternative database solution
+
+## 🚨 Current Technical Blocker - IPv6 Connectivity Issue
+
+### Problem Summary
+Railway cannot connect to Supabase database due to IPv6 networking issue:
+- **Error**: `ENETUNREACH 2600:1f1c:f9:4d03:c6e7:e58f:530c:a105:6543`
+- **Cause**: Railway tries to connect via IPv6, but doesn't support outbound IPv6
+- **Impact**: Database operations fail, email forwarding returns 500 errors
+
+### Attempted Solutions
+1. ✅ **Added `family: 4` option** - Didn't work, pg library still prefers IPv6
+2. ✅ **Tried connection parameters** - PostgreSQL client doesn't honor IPv4 hints
+3. 🔄 **Switched to direct connection** - Changed port 6543→5432 (currently testing)
+
+### Next Steps When Resuming
+1. **Test current fix**: Check if direct connection (port 5432) resolved IPv6 issue
+2. **Alternative solutions if still failing**:
+   - Use different Supabase connection string (IPv4-only)
+   - Switch to different database provider (PlanetScale, Neon, etc.)
+   - Use Railway's built-in PostgreSQL
+   - Implement DNS resolution workaround
+
+### Test URLs
+- Health: `https://datavault-production.up.railway.app/health`
+- Database: `https://datavault-production.up.railway.app/test-db`
+- Email test: Send to `test1234@datavlt.io`
 
 ---
 
