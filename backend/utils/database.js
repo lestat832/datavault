@@ -56,16 +56,14 @@ if (dbUrl) {
 // Create connection pool with error handling
 let pool;
 
-// Parse and validate DATABASE_URL
-const dbUrl = process.env.DATABASE_URL || '';
-if (!dbUrl) {
-  logger.error('DATABASE_URL is not set!');
-} else {
+// Create pool using the dbUrl already declared and validated above
+if (dbUrl) {
   try {
-    // Check if this is a Supabase pooler URL (port 6543) or direct (port 5432)
+    // Use the already parsed URL from above, or reparse for pool config
     const url = new URL(dbUrl);
     const isPooler = url.port === '6543';
-    logger.info('Database connection type', { 
+    
+    logger.info('Creating database pool', { 
       host: url.hostname,
       port: url.port,
       isPooler,
@@ -99,6 +97,8 @@ if (!dbUrl) {
     });
     // pool remains undefined, queries will fail with clear error
   }
+} else {
+  logger.error('Cannot create database pool - DATABASE_URL not set');
 }
 
 // Connection event handlers
