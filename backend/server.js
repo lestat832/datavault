@@ -21,8 +21,6 @@ process.on('unhandledRejection', (reason, promise) => {
 // Load modules and create app
 let express, cors, helmet, rateLimit, emailRoutes, authRoutes, aliasRoutes, logger, db, app;
 
-// Wrap startup in async IIFE for database testing
-(async () => {
 try {
   console.log('📦 Loading express...');
   express = require('express');
@@ -46,18 +44,8 @@ try {
   console.log('📦 Loading database module...');
   db = require('./utils/database');
   
-  // Test database connection on startup
-  console.log('🔗 Testing database connection...');
-  try {
-    await db.testConnection();
-    console.log('✅ Database connection successful!');
-  } catch (dbError) {
-    console.error('⚠️  WARNING: Database connection failed:', dbError.message);
-    console.error('⚠️  The server will start but database operations will fail');
-    // Don't exit - let the server run and provide better error messages
-  }
-  
   console.log('✅ All modules loaded successfully');
+  console.log('⏭️ Database connection will be tested after server starts');
   
   console.log('🏗️  Creating Express app...');
   app = express();
@@ -67,7 +55,6 @@ try {
   console.error('Stack trace:', error.stack);
   process.exit(1);
 }
-})(); // End async IIFE
 
 const PORT = process.env.PORT || 3000;
 
@@ -191,11 +178,19 @@ try {
     try {
       logger.info(`DataVault API server running on port ${PORT}`);
       
-      // TEMP: Database connection test disabled
-      console.log('⏭️ Skipping database connection test for email forwarding test...');
-      logger.info('Database connection test temporarily disabled');
+      // Test database connection after server starts
+      console.log('🔗 Testing database connection...');
+      try {
+        await db.testConnection();
+        console.log('✅ Database connection successful!');
+        logger.info('Database connection test passed');
+      } catch (dbError) {
+        console.error('⚠️  WARNING: Database connection failed:', dbError.message);
+        console.error('⚠️  Email forwarding will fail until database is fixed');
+        logger.error('Database connection test failed', { error: dbError.message });
+      }
     } catch (err) {
-      console.log('⚠️ Startup completed (database disabled for testing)');
+      console.log('⚠️ Server startup completed with warnings:', err.message);
     }
   });
   
