@@ -41,8 +41,8 @@ try {
   console.log('📦 Loading logger...');
   logger = require('./utils/logger');
   
-  console.log('📦 TEMP: Skipping database loading for testing...');
-  // db = require('./utils/database'); // TEMPORARILY DISABLED
+  console.log('📦 Loading database module...');
+  db = require('./utils/database');
   
   console.log('✅ All modules loaded successfully');
   
@@ -147,10 +147,10 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Graceful shutdown (database disabled)
+// Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  // await db.end(); // TEMPORARILY DISABLED
+  await db.end();
   process.exit(0);
 });
 
