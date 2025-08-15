@@ -1,12 +1,17 @@
 -- DataVault Quick Test Setup
 -- Run this in Supabase SQL Editor to quickly set up test data
 
--- IMPORTANT: Replace 'YOUR-EMAIL@gmail.com' with your actual email address!
+-- Test aliases created:
+-- test1234@datavlt.io → datavault.service@gmail.com
+-- demo5678@datavlt.io → datavault.service@gmail.com
+-- mail9012@datavlt.io → datavault.service@gmail.com
+-- hello123@datavlt.io → datavault.service@gmail.com
+-- info4567@datavlt.io → datavault.service@gmail.com
 
 -- Step 1: Create a test user
 INSERT INTO users (email, email_verified, created_at)
 VALUES (
-  'YOUR-EMAIL@gmail.com',  -- ← CHANGE THIS TO YOUR EMAIL!
+  'datavault.service@gmail.com',  -- Test user email
   true,
   NOW()
 )
@@ -17,7 +22,7 @@ RETURNING id, email;
 -- Step 2: Create test aliases
 -- This will automatically use the user you just created/updated
 WITH user_info AS (
-  SELECT id FROM users WHERE email = 'YOUR-EMAIL@gmail.com' LIMIT 1
+  SELECT id FROM users WHERE email = 'datavault.service@gmail.com' LIMIT 1
 )
 INSERT INTO aliases (alias, user_id, is_active, created_at)
 SELECT alias, user_id, true, NOW()
@@ -43,7 +48,7 @@ SELECT
   a.created_at::timestamp(0) as "Created"
 FROM aliases a
 JOIN users u ON a.user_id = u.id
-WHERE u.email = 'YOUR-EMAIL@gmail.com'
+WHERE u.email = 'datavault.service@gmail.com'
 ORDER BY a.created_at DESC;
 
 -- You should see 5 aliases ready for testing!

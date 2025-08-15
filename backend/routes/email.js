@@ -1,7 +1,7 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const { simpleParser } = require('mailparser');
-// const db = require('../utils/database'); // TEMPORARILY DISABLED for testing
+const db = require('../utils/database');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -116,19 +116,39 @@ router.post('/email', async (req, res) => {
     const toAddress = Array.isArray(to) ? to[0] : to;
     const aliasName = toAddress.split('@')[0].toLowerCase();
     
-    // TEMPORARY BYPASS: Skip ALL database operations and forward directly
-    logger.info('TEMP BYPASS: Skipping all database operations and forwarding directly', { 
-      aliasName, 
-      from,
-      subject: subject || 'No Subject'
+    // Look up alias in database
+    logger.info('Looking up alias in database', { aliasName });
+    
+    const aliasData = await db.getAliasByName(aliasName);
+    
+    if (!aliasData) {
+      logger.warn('Alias not found', { aliasName });
+      return res.status(404).json({ 
+        error: 'Alias not found',
+        alias: aliasName 
+      });
+    }
+    
+    if (!aliasData.is_active) {
+      logger.warn('Alias is disabled', { aliasName });
+      return res.status(403).json({ 
+        error: 'Alias is disabled',
+        alias: aliasName 
+      });
+    }
+    
+    logger.info('Alias found, forwarding email', {
+      aliasName,
+      targetEmail: aliasData.user_email,
+      userId: aliasData.user_id
     });
     
     try {
-      // Forward email directly to hardcoded address
+      // Forward email to the user's actual email address
       await forwardEmail({
         alias: aliasName,
         originalTo: to,
-        targetEmail: 'datavault.service@gmail.com', // HARDCODED for testing
+        targetEmail: aliasData.user_email,
         from,
         subject,
         textContent,
@@ -136,16 +156,42 @@ router.post('/email', async (req, res) => {
         attachments
       });
       
-      logger.info('TEMP: Email forwarded successfully without database', { 
+      // Update alias usage statistics
+      await db.updateAliasUsage(aliasName);
+      
+      // Log the email delivery
+      await db.logEmail(
         aliasName,
-        targetEmail: 'datavault.service@gmail.com' 
+        from,
+        subject || 'No Subject',
+        aliasData.user_email,
+        'delivered'
+      );
+      
+      logger.info('Email forwarded successfully', { 
+        aliasName,
+        targetEmail: aliasData.user_email 
       });
       
     } catch (forwardError) {
-      logger.error('TEMP: Email forwarding failed', { 
+      logger.error('Email forwarding failed', { 
         error: forwardError.message,
         stack: forwardError.stack 
       });
+      
+      // Log the failed delivery
+      try {
+        await db.logEmail(
+          aliasName,
+          from,
+          subject || 'No Subject',
+          aliasData.user_email,
+          'failed'
+        );
+      } catch (logError) {
+        logger.error('Failed to log email error', { error: logError.message });
+      }
+      
       throw forwardError;
     }
     
@@ -153,10 +199,6 @@ router.post('/email', async (req, res) => {
     
   } catch (error) {
     logger.error('Email forwarding error:', error);
-    
-    // TEMP: Skip database logging for testing
-    logger.info('TEMP: Skipping error logging due to database bypass');
-    
     res.status(500).json({ error: 'Email forwarding failed' });
   }
 });
