@@ -55,21 +55,50 @@ if (dbUrl) {
 
 // Create connection pool with error handling
 let pool;
-try {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000, // Increased timeout
-    // Additional debugging options
-    log: (msg) => logger.debug('PG Pool:', msg),
-  });
-  
-  logger.info('Database pool created successfully');
-} catch (error) {
-  logger.error('Failed to create database pool', { error: error.message, stack: error.stack });
-  // Don't exit immediately, let the app try to handle it
+
+// Parse and validate DATABASE_URL
+const dbUrl = process.env.DATABASE_URL || '';
+if (!dbUrl) {
+  logger.error('DATABASE_URL is not set!');
+} else {
+  try {
+    // Check if this is a Supabase pooler URL (port 6543) or direct (port 5432)
+    const url = new URL(dbUrl);
+    const isPooler = url.port === '6543';
+    logger.info('Database connection type', { 
+      host: url.hostname,
+      port: url.port,
+      isPooler,
+      database: url.pathname.slice(1)
+    });
+    
+    // Create pool with Supabase-compatible settings
+    pool = new Pool({
+      connectionString: dbUrl,
+      ssl: { 
+        rejectUnauthorized: false,
+        // Supabase requires SSL
+        require: true
+      },
+      max: 10, // Reduced for free tier
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000, // Increased timeout for Supabase
+      // Add pgbouncer mode for pooler connections
+      ...(isPooler && { 
+        statement_timeout: 60000,
+        query_timeout: 60000 
+      })
+    });
+    
+    logger.info('Database pool created successfully');
+  } catch (error) {
+    logger.error('Failed to create database pool', { 
+      error: error.message, 
+      stack: error.stack,
+      dbUrlLength: dbUrl.length 
+    });
+    // pool remains undefined, queries will fail with clear error
+  }
 }
 
 // Connection event handlers
@@ -99,10 +128,28 @@ if (pool) {
   });
 }
 
+// Test database connection
+const testConnection = async () => {
+  if (!pool) {
+    throw new Error('Database pool not initialized');
+  }
+  try {
+    const result = await pool.query('SELECT NOW() as time');
+    logger.info('Database connection test successful', { time: result.rows[0].time });
+    return true;
+  } catch (error) {
+    logger.error('Database connection test failed', { 
+      error: error.message, 
+      code: error.code 
+    });
+    throw error;
+  }
+};
+
 // Helper function for queries
 const query = async (text, params) => {
   if (!pool) {
-    const error = new Error('Database pool not initialized');
+    const error = new Error('Database pool not initialized - DATABASE_URL may be missing or invalid');
     logger.error('Query attempted with no pool', { text, error: error.message });
     throw error;
   }
@@ -160,6 +207,7 @@ const transaction = async (callback) => {
 const db = {
   query,
   transaction,
+  testConnection,
   
   // User operations
   async createUser(email) {

@@ -21,6 +21,8 @@ process.on('unhandledRejection', (reason, promise) => {
 // Load modules and create app
 let express, cors, helmet, rateLimit, emailRoutes, authRoutes, aliasRoutes, logger, db, app;
 
+// Wrap startup in async IIFE for database testing
+(async () => {
 try {
   console.log('📦 Loading express...');
   express = require('express');
@@ -44,6 +46,17 @@ try {
   console.log('📦 Loading database module...');
   db = require('./utils/database');
   
+  // Test database connection on startup
+  console.log('🔗 Testing database connection...');
+  try {
+    await db.testConnection();
+    console.log('✅ Database connection successful!');
+  } catch (dbError) {
+    console.error('⚠️  WARNING: Database connection failed:', dbError.message);
+    console.error('⚠️  The server will start but database operations will fail');
+    // Don't exit - let the server run and provide better error messages
+  }
+  
   console.log('✅ All modules loaded successfully');
   
   console.log('🏗️  Creating Express app...');
@@ -54,6 +67,7 @@ try {
   console.error('Stack trace:', error.stack);
   process.exit(1);
 }
+})(); // End async IIFE
 
 const PORT = process.env.PORT || 3000;
 
