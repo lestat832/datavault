@@ -78,6 +78,8 @@ if (dbUrl) {
         // Supabase requires SSL
         require: true
       },
+      // Force IPv4 connections (Railway doesn't support IPv6)
+      family: 4,
       max: 10, // Reduced for free tier
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000, // Increased timeout for Supabase
