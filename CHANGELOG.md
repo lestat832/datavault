@@ -2,6 +2,38 @@
 
 All notable changes to DataVault will be documented in this file.
 
+## [0.5.0] - 2025-08-18
+
+### 🚀 Complete Email Forwarding System Operational
+
+#### Major Achievement
+- **FULLY WORKING**: End-to-end email forwarding with database integration
+- All components successfully integrated and tested in production
+- System ready for real-world use
+
+#### Key Features Working
+- ✅ Email forwarding pipeline: Cloudflare → Worker → Railway → Gmail
+- ✅ Database integration with real-time alias lookups
+- ✅ Proper MIME parsing for clean email content
+- ✅ Reply-to headers correctly set to original sender
+- ✅ Activity logging and usage statistics tracking
+
+#### Solution for Railway IPv6 Issue
+- Successfully resolved using Supabase Supavisor connection string
+- Supavisor provides IPv4 compatibility for Railway platform
+- Connection string format: `pooler.supabase.com:6543`
+- No additional costs or workarounds needed
+
+#### Database Configuration
+- Test aliases configured: test1234@, demo5678@, mail9012@, hello123@, info4567@datavlt.io
+- All aliases correctly forward to datavault.service@gmail.com
+- User management and alias assignment working perfectly
+
+#### Technical Details
+- Removed IPv6 workaround code (port switching)
+- Optimized pool settings for Supavisor connections
+- Clean, production-ready codebase
+
 ## [0.4.0] - 2025-08-15
 
 ### 🔗 Database Integration & Railway IPv6 Troubleshooting

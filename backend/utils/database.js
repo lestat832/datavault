@@ -56,48 +56,34 @@ if (dbUrl) {
 // Create connection pool with error handling
 let pool;
 
-// Railway IPv6 compatibility - try to use direct connection instead of pooler
+// Create connection pool with Supavisor for Railway compatibility
 if (dbUrl) {
   try {
     const url = new URL(dbUrl);
-    let workingUrl = dbUrl;
-    let connectionType = 'pooler';
-    
-    // If this is a pooler connection (port 6543), try switching to direct (port 5432)
-    if (url.port === '6543') {
-      // Create direct connection URL as fallback for IPv6 issues
-      const directUrl = new URL(dbUrl);
-      directUrl.port = '5432';
-      workingUrl = directUrl.toString();
-      connectionType = 'direct';
-      
-      logger.warn('Switching from pooler to direct connection for Railway IPv6 compatibility', {
-        originalPort: '6543',
-        newPort: '5432',
-        hostname: url.hostname
-      });
-    }
+    const isPooler = url.port === '6543';
     
     logger.info('Creating database pool', { 
       hostname: url.hostname,
-      port: url.port === '6543' ? '5432' : url.port,
-      connectionType,
+      port: url.port,
+      isPooler,
       database: url.pathname.slice(1)
     });
 
-    // Create pool with direct connection for better Railway compatibility
+    // Create pool with Supavisor connection (IPv4 compatible)
     pool = new Pool({
-      connectionString: workingUrl,
+      connectionString: dbUrl,
       ssl: { 
         rejectUnauthorized: false,
         require: true
       },
-      max: 5, // Reduced for direct connections
+      max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 15000, // Longer timeout for direct connections
-      // Remove pooler-specific options for direct connection
-      statement_timeout: 30000,
-      query_timeout: 30000
+      connectionTimeoutMillis: 10000,
+      // Add pooler-specific options if using Supavisor
+      ...(isPooler && { 
+        statement_timeout: 60000,
+        query_timeout: 60000 
+      })
     });
     
     logger.info('Database pool created successfully');
