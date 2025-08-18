@@ -219,17 +219,18 @@
     <div class="section">
       <h2>Compatibility Settings</h2>
       <p style="color: #666; margin-bottom: 16px;">
-        Some websites don't accept email addresses with "+" symbols. Use these settings to generate compatible aliases.
+        Advanced settings for alias generation. The default @datavlt.io aliases work with all websites, but you can fallback to local subaddressing if needed.
       </p>
       <div class="form-group">
         <label style="display: flex; align-items: center; cursor: pointer;">
           <input type="checkbox" id="compatibilityMode" style="margin-right: 8px; width: auto;">
-          Enable Compatibility Mode (use dots instead of + symbols)
+          Fallback to local subaddressing if @datavlt.io aliases fail
         </label>
       </div>
       <div class="form-group">
-        <label for="aliasFormat">Default Alias Format</label>
+        <label for="aliasFormat">Fallback Alias Format (when not using @datavlt.io)</label>
         <select id="aliasFormat" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;">
+          <option value="backend">@datavlt.io aliases (recommended)</option>
           <option value="standard">Standard: user+site-random@domain.com</option>
           <option value="dots">Dots: user.site.random@domain.com</option>
           <option value="clean">Clean: usersiterandom@domain.com</option>
