@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DataVault MVP Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        input[type="email"] { padding: 8px; width: 300px; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>DataVault MVP Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Backend API</h2>
+        <input type="email" id="testEmail" placeholder="your.email@example.com" value="datavault.service@gmail.com">
+        <br>
+        <button onclick="testBackendAPI()">Create Anonymous Alias</button>
+        <div id="apiResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Extension Integration</h2>
+        <p>After loading this extension in Chrome:</p>
+        <ol>
+            <li>Open extension options</li>
+            <li>Enter your email address</li>
+            <li>Visit any website</li>
+            <li>Click @ button next to email field</li>
+            <li>Should generate real @datavlt.io alias</li>
+        </ol>
+        <input type="email" placeholder="test@example.com" id="testField">
+        <p><em>With extension installed, @ button should appear here ↑</em></p>
+    </div>
+
+    <script>
+        async function testBackendAPI() {
+            const email = document.getElementById('testEmail').value;
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an email address</span>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = 'Creating alias...';
+                
+                const response = await fetch('https://datavault-production.up.railway.app/api/aliases/create-anonymous', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        targetEmail: email
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <strong>✅ Success!</strong><br>
+                    <strong>Alias:</strong> ${data.alias.full_address}<br>
+                    <strong>Target:</strong> ${data.alias.target_email}<br>
+                    <strong>Created:</strong> ${data.alias.created_at}<br>
+                    <em>You can now send emails to ${data.alias.full_address} and they will forward to ${email}</em>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
