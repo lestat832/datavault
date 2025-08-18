@@ -219,4 +219,77 @@ router.patch('/:alias/toggle', authenticateToken, async (req, res) => {
   }
 });
 
+// Create anonymous alias (for MVP without authentication)
+router.post('/create-anonymous', [
+  body('targetEmail').isEmail().withMessage('Valid email is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: errors.array() 
+      });
+    }
+
+    const { targetEmail } = req.body;
+
+    // Check if user exists, create if not
+    let user = await db.getUserByEmail(targetEmail);
+    if (!user) {
+      user = await db.createUser(targetEmail);
+      logger.info('Anonymous user created', { email: targetEmail });
+    }
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    let alias;
+    
+    // Generate unique alias
+    do {
+      alias = generateAlias();
+      attempts++;
+      
+      if (attempts > maxAttempts) {
+        return res.status(500).json({ error: 'Failed to generate unique alias' });
+      }
+      
+      // Check if alias is appropriate
+      if (!isAliasAppropriate(alias)) {
+        continue;
+      }
+      
+      // Check if alias already exists
+      const existing = await db.getAliasByName(alias);
+      if (!existing) {
+        break; // Found unique alias
+      }
+    } while (true);
+    
+    // Create alias in database
+    const newAlias = await db.createAlias(alias, user.id);
+    
+    logger.info('Anonymous alias created', { 
+      targetEmail: targetEmail, 
+      alias: alias,
+      fullAddress: `${alias}@datavlt.io`
+    });
+    
+    res.status(201).json({
+      success: true,
+      alias: {
+        alias: newAlias.alias,
+        full_address: `${newAlias.alias}@datavlt.io`,
+        target_email: targetEmail,
+        is_active: newAlias.is_active,
+        created_at: newAlias.created_at
+      }
+    });
+    
+  } catch (error) {
+    logger.error('Anonymous alias creation error:', error);
+    res.status(500).json({ error: 'Failed to create alias' });
+  }
+});
+
 module.exports = router;
