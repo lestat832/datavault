@@ -4,8 +4,11 @@ const STORAGE_KEYS = {
   FIRST_INSTALL: 'firstInstall',
   COMPATIBILITY_MODE: 'compatibilityMode',
   ALIAS_FORMAT: 'aliasFormat',
-  SITE_FORMATS: 'siteFormats'
+  SITE_FORMATS: 'siteFormats',
+  USE_BACKEND: 'useBackend'
 };
+
+const API_BASE_URL = 'https://datavault-production.up.railway.app';
 
 const ALIAS_FORMATS = {
   STANDARD: 'standard',    // user+site-random@domain.com
@@ -22,7 +25,8 @@ chrome.runtime.onInstalled.addListener(async () => {
       [STORAGE_KEYS.ALIASES]: {},
       [STORAGE_KEYS.COMPATIBILITY_MODE]: false,
       [STORAGE_KEYS.ALIAS_FORMAT]: ALIAS_FORMATS.STANDARD,
-      [STORAGE_KEYS.SITE_FORMATS]: {}
+      [STORAGE_KEYS.SITE_FORMATS]: {},
+      [STORAGE_KEYS.USE_BACKEND]: true
     });
     
     chrome.tabs.create({ url: 'options.html?firstInstall=true' });
@@ -38,6 +42,31 @@ function generateRandomString(length = 8) {
   return result;
 }
 
+async function createBackendAlias(targetEmail) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/aliases/create-anonymous`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        targetEmail: targetEmail
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.alias.full_address; // Returns something like "a7b3x9k2@datavlt.io"
+  } catch (error) {
+    console.error('Backend alias creation failed:', error);
+    throw new Error(`Failed to create alias: ${error.message}`);
+  }
+}
+
 function cleanDomainName(domain) {
   return domain
     .replace(/^www\./, '')
@@ -46,15 +75,27 @@ function cleanDomainName(domain) {
 }
 
 async function generateAlias(domain, format = null) {
-  const { targetEmail, aliasFormat, siteFormats, compatibilityMode } = await chrome.storage.local.get([
+  const { targetEmail, aliasFormat, siteFormats, compatibilityMode, useBackend } = await chrome.storage.local.get([
     STORAGE_KEYS.TARGET_EMAIL,
     STORAGE_KEYS.ALIAS_FORMAT,
     STORAGE_KEYS.SITE_FORMATS,
-    STORAGE_KEYS.COMPATIBILITY_MODE
+    STORAGE_KEYS.COMPATIBILITY_MODE,
+    STORAGE_KEYS.USE_BACKEND
   ]);
   
   if (!targetEmail) {
     throw new Error('Target email not set');
+  }
+
+  // Use backend API if enabled (default for MVP)
+  if (useBackend) {
+    try {
+      const alias = await createBackendAlias(targetEmail);
+      return { alias, format: 'backend' };
+    } catch (error) {
+      // Fall back to local generation if backend fails
+      console.warn('Backend alias creation failed, falling back to local generation:', error);
+    }
   }
   
   // Determine which format to use

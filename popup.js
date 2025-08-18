@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formatLabels = {
       'standard': 'Standard (+)',
       'dots': 'Dots (.)',
-      'clean': 'Clean'
+      'clean': 'Clean',
+      'backend': 'Real Alias (@datavlt.io)'
     };
     
     contentDiv.innerHTML = `
