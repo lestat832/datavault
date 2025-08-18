@@ -2,6 +2,51 @@
 
 All notable changes to DataVault will be documented in this file.
 
+## [0.6.0] - 2025-08-18
+
+### 🎉 MVP COMPLETE - Chrome Extension Integration
+
+#### Major Milestone Achievement
+- **FULLY FUNCTIONAL MVP**: Chrome extension now generates real @datavlt.io aliases via backend API
+- **NO AUTHENTICATION REQUIRED**: Users download extension → enter email → immediately use aliases
+- **USER CONFIRMED WORKING**: Screenshot evidence shows successful alias generation (koa4nq05@datavlt.io)
+- **COMPLETE END-TO-END FLOW**: Real aliases forward to user's inbox without any signup process
+
+#### New MVP Features
+- ✅ Anonymous alias creation endpoint: `POST /api/aliases/create-anonymous`
+- ✅ Chrome extension backend integration with Railway API
+- ✅ Real 8-character alphanumeric aliases (e.g., `koa4nq05@datavlt.io`)
+- ✅ Automatic user creation when needed (no explicit signup)
+- ✅ Backend API fallback to local generation if needed
+- ✅ Chrome extension permissions configured for Railway access
+
+#### Chrome Extension Updates
+- Added `API_BASE_URL` configuration pointing to Railway backend
+- Implemented `createBackendAlias()` function for real alias generation
+- Updated `generateAlias()` to use backend by default with local fallback
+- Added `USE_BACKEND` storage setting (enabled by default)
+- Updated UI messaging to focus on @datavlt.io instead of Gmail subaddressing
+- Added API permissions to manifest.json for Railway communication
+
+#### Backend API Enhancements
+- New anonymous endpoint accepts `targetEmail` without authentication
+- Generates secure 8-character aliases with collision detection
+- Creates user records automatically when needed
+- Re-enabled alias routes in server.js for MVP functionality
+- Comprehensive error handling and validation
+
+#### User Experience Improvements
+- Updated options page to emphasize @datavlt.io aliases
+- Reframed compatibility settings as advanced/fallback options
+- Added test file (test-mvp.html) for manual API testing
+- Clear messaging: "No signup required - just enter your email and start using aliases!"
+
+#### Technical Implementation
+- Database integration for real alias → email mapping
+- Secure random alias generation with inappropriate word filtering
+- Local storage sync between extension and backend
+- Production-ready error handling and fallbacks
+
 ## [0.5.0] - 2025-08-18
 
 ### 🚀 Complete Email Forwarding System Operational
