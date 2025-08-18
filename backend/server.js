@@ -36,7 +36,7 @@ try {
   console.log('📦 Loading routes...');
   emailRoutes = require('./routes/email'); // Email forwarding only
   // ({ router: authRoutes } = require('./routes/auth')); // TEMPORARILY DISABLED
-  // aliasRoutes = require('./routes/aliases'); // TEMPORARILY DISABLED
+  aliasRoutes = require('./routes/aliases'); // Re-enabled for MVP
   
   console.log('📦 Loading logger...');
   logger = require('./utils/logger');
@@ -144,7 +144,7 @@ app.get('/test-db', async (req, res) => {
 // Routes (database-dependent routes temporarily disabled)
 app.use('/webhook', emailRoutes); // Email forwarding only
 // app.use('/api/auth', authRoutes); // TEMPORARILY DISABLED
-// app.use('/api/aliases', aliasRoutes); // TEMPORARILY DISABLED
+app.use('/api/aliases', aliasRoutes); // Re-enabled for MVP
 
 // Error handling middleware
 app.use((err, req, res, next) => {
