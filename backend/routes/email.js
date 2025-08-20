@@ -247,8 +247,25 @@ async function forwardEmail({
 
     logger.info('DETAILED: Transporter exists, creating mail options');
 
+    // Parse sender name from the from address
+    let senderName = 'Email';
+    if (from) {
+      // Handle formats like "Medium <noreply@medium.com>" or just "noreply@medium.com"
+      if (from.includes('<')) {
+        // Extract name before < symbol
+        senderName = from.split('<')[0].trim() || 'Email';
+        // Remove quotes if present
+        senderName = senderName.replace(/^["']|["']$/g, '');
+      } else if (from.includes('@')) {
+        // Extract domain name from email
+        const domain = from.split('@')[1].split('.')[0];
+        // Capitalize first letter
+        senderName = domain.charAt(0).toUpperCase() + domain.slice(1);
+      }
+    }
+
     const mailOptions = {
-      from: `DataVault <noreply@datavlt.io>`,
+      from: `"${senderName} via DataVault" <noreply@datavlt.io>`,
       to: targetEmail,
       subject: subject || 'No Subject',
       text: textContent || `Email forwarded from ${from}`,
@@ -257,7 +274,8 @@ async function forwardEmail({
       headers: {
         'X-DataVault-Alias': alias,
         'X-DataVault-Original-To': originalTo,
-        'X-Original-From': from
+        'X-Original-From': from,
+        'X-Original-Sender-Name': senderName
       }
     };
     
